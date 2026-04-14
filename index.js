@@ -6,27 +6,22 @@ const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
 app.use(bodyParser.json());
 
-// Health check (optional but useful)
+// Health check
 app.get("/", (req, res) => {
     res.send("DOCX Generator API is running 🚀");
 });
 
+// Generate DOCX API
 app.post("/generate-docx", (req, res) => {
     try {
         const { Name, Email, Amount } = req.body;
 
-        // Load template file
+        // Load template
         const filePath = path.join(__dirname, "template.docx");
         const content = fs.readFileSync(filePath, "binary");
 
-        // Load DOCX into memory
         const zip = new PizZip(content);
         const doc = new Docxtemplater(zip, {
             paragraphLoop: true,
@@ -42,12 +37,10 @@ app.post("/generate-docx", (req, res) => {
 
         doc.render();
 
-        // Generate DOCX buffer
         const buffer = doc.getZip().generate({
             type: "nodebuffer"
         });
 
-        // Convert to Base64
         const base64File = buffer.toString("base64");
 
         res.json({
@@ -64,7 +57,7 @@ app.post("/generate-docx", (req, res) => {
     }
 });
 
-// IMPORTANT for Render deployment
+// ✅ ONLY ONE PORT DECLARATION + LISTEN
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
