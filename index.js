@@ -6,6 +6,11 @@ const PizZip = require("pizzip");
 const Docxtemplater = require("docxtemplater");
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
 app.use(bodyParser.json());
 
 // Health check (optional but useful)
