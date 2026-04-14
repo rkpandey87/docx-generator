@@ -23,24 +23,38 @@ app.post("/generate-docx", (req, res) => {
         const content = fs.readFileSync(filePath, "binary");
 
         const zip = new PizZip(content);
+
+        // ✅ IMPORTANT: Custom delimiters { }
         const doc = new Docxtemplater(zip, {
             paragraphLoop: true,
-            linebreaks: true
+            linebreaks: true,
+            delimiters: {
+                start: "{",
+                end: "}"
+            }
         });
 
-        // Replace placeholders
+        // Set data
         doc.setData({
             Name: Name || "Default Name",
             Email: Email || "noemail@example.com",
             Amount: Amount || "0"
         });
 
-        doc.render();
+        // Render document
+        try {
+            doc.render();
+        } catch (error) {
+            console.log("Render Error:", JSON.stringify(error, null, 2));
+            throw error;
+        }
 
+        // Generate buffer
         const buffer = doc.getZip().generate({
             type: "nodebuffer"
         });
 
+        // Convert to Base64
         const base64File = buffer.toString("base64");
 
         res.json({
@@ -49,23 +63,17 @@ app.post("/generate-docx", (req, res) => {
         });
 
     } catch (error) {
-    console.log("FULL ERROR:", error);
+        console.error("FULL ERROR:", error);
 
-    if (error.properties && error.properties.errors) {
-        error.properties.errors.forEach(function (e) {
-            console.log("Suberror:", e);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+            details: error.properties || error
         });
     }
-
-    res.status(500).json({
-        success: false,
-        message: error.message,
-        details: error.properties
-    });
-}
 });
 
-// ✅ ONLY ONE PORT DECLARATION + LISTEN
+// Start server (ONLY ONCE)
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
