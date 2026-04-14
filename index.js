@@ -49,12 +49,20 @@ app.post("/generate-docx", (req, res) => {
         });
 
     } catch (error) {
-        console.error("Error generating DOCX:", error);
-        res.status(500).json({
-            success: false,
-            error: error.message
+    console.log("FULL ERROR:", error);
+
+    if (error.properties && error.properties.errors) {
+        error.properties.errors.forEach(function (e) {
+            console.log("Suberror:", e);
         });
     }
+
+    res.status(500).json({
+        success: false,
+        message: error.message,
+        details: error.properties
+    });
+}
 });
 
 // ✅ ONLY ONE PORT DECLARATION + LISTEN
